@@ -1,8 +1,12 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:record_application/common/bases/base_widget.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:record_application/common/widgets/progress_listener_widget.dart';
+import 'package:record_application/features/player_audio/Player_Bloc.dart';
+import 'package:record_application/features/player_audio/player_event.dart';
 import 'dart:io';
 
 import 'package:volume_controller/volume_controller.dart';
@@ -19,7 +23,9 @@ class _PlayerPageState extends State<PlayerPage> {
   Widget build(BuildContext context) {
     return PageContainer(
       child: _PlayerContainer(),
-      providers: [],
+      providers: [
+        Provider<PlayerBloc>(create: (context)=>PlayerBloc())
+      ],
       appBar: AppBar(
         title: Text("Player Page"),
       ),
@@ -35,6 +41,7 @@ class _PlayerContainer extends StatefulWidget {
 }
 
 class _PlayerContainerState extends State<_PlayerContainer> {
+  late PlayerBloc _bloc;
   late AudioPlayer _audioPlayer = AudioPlayer();
   late bool _isPlaying;
 
@@ -46,7 +53,6 @@ class _PlayerContainerState extends State<_PlayerContainer> {
   double _setVolumeValue = 0;
 
   Future setAudio() async {
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
     //load audio from local
     /*final result = await FilePicker.platform.pickFiles();
@@ -54,7 +60,7 @@ class _PlayerContainerState extends State<_PlayerContainer> {
       final file = File(result.files.single.path!);
       _audioPlayer.setSourceAsset(file.path);
     }*/
-     _audioPlayer.setSourceAsset('assets/audio/audio_test.mp3');
+     _audioPlayer.setSourceAsset('audio/audio_test.mp3');
 
     //online
     _audioPlayer.setSourceUrl(
@@ -70,6 +76,7 @@ class _PlayerContainerState extends State<_PlayerContainer> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _bloc = context.read();
     _audioPlayer = AudioPlayer();
     _isPlaying = false;
     _duration = Duration.zero;
@@ -103,70 +110,76 @@ class _PlayerContainerState extends State<_PlayerContainer> {
     // TODO: implement dispose
     super.dispose();
     VolumeController().removeListener();
+
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                "https://phantom-marca.unidadeditorial.es/bd1fe4bec9580bfc6b7324d8c408165a/resize/1320/f/jpg/assets/multimedia/imagenes/2022/12/27/16721764313725.jpg",
-                width: 250,
-                height: 250,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const Text(
-              "Flutter song",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const Text(
-              "Sarah Abs",
-              style: TextStyle(fontSize: 20),
-            ),
-            Slider(
-                min: 0,
-                max: _duration.inSeconds.toDouble(),
-                value: _position.inSeconds.toDouble(),
-                onChanged: (value) async {
-                  final position = Duration(seconds: value.toInt());
-                  await _audioPlayer.seek(position);
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    "https://phantom-marca.unidadeditorial.es/bd1fe4bec9580bfc6b7324d8c408165a/resize/1320/f/jpg/assets/multimedia/imagenes/2022/12/27/16721764313725.jpg",
+                    width: 250,
+                    height: 250,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const Text(
+                  "Flutter song",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  "Sarah Abs",
+                  style: TextStyle(fontSize: 20),
+                ),
+                Slider(
+                    min: 0,
+                    max: _duration.inSeconds.toDouble(),
+                    value: _position.inSeconds.toDouble(),
+                    onChanged: (value) async {
+                      final position = Duration(seconds: value.toInt());
+                      await _audioPlayer.seek(position);
 
-                  //optional
-                  await _audioPlayer.resume();
-                }),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(formatTime(_position)),
-                  Text(formatTime(_duration - _position))
-                ],
-              ),
+                      //optional
+                      await _audioPlayer.resume();
+                    }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(formatTime(_position)),
+                      Text(formatTime(_duration - _position))
+                    ],
+                  ),
+                ),
+                CircleAvatar(
+                  radius: 35,
+                  child: IconButton(
+                    icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                    iconSize: 50,
+                    onPressed: () async {
+                      if (_isPlaying) {
+                        await _audioPlayer.pause();
+
+                      } else {
+                        await _audioPlayer.resume();
+                      }
+                    },
+                  ),
+                )
+              ],
             ),
-            CircleAvatar(
-              radius: 35,
-              child: IconButton(
-                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                iconSize: 50,
-                onPressed: () async {
-                  if (_isPlaying) {
-                    await _audioPlayer.pause();
-                  } else {
-                    await _audioPlayer.resume();
-                  }
-                },
-              ),
-            )
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

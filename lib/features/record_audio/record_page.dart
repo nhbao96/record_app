@@ -138,10 +138,11 @@ class _RecordContainerState extends State<_RecordContainer> {
               }else{
                 await record();
               }
-              setState(() {
-              });
             },
           ),
+          TextButton(onPressed: (){
+            Navigator.pushNamed(context, "player-page");
+          }, child: Text("Open Player"))
         ],
       ),
     );

@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
        "record-page": (context) => RecordPage(),
         "player-page": (context)=>PlayerPage()
       },
-      initialRoute: "player-page",
+      initialRoute: "record-page",
     );
   }
 }
