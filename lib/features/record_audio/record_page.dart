@@ -1,7 +1,9 @@
 
 import 'dart:io';
 
+
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,11 +38,9 @@ class _RecordContainer extends StatefulWidget {
 class _RecordContainerState extends State<_RecordContainer> {
   final recoder = FlutterSoundRecorder();
   bool isRecoderReady = false;
-
   late PermissionStatus isPermisMicro;
 
   String _currentFilePath = '', _recordedFilePath = '';
-
 
   @override
   void dispose() {
@@ -63,6 +63,9 @@ class _RecordContainerState extends State<_RecordContainer> {
       if(!isPermisMicro.isGranted){
         throw 'Microphone permission not grannted';
       }
+      await recoder.openRecorder();
+      isRecoderReady = true;
+      await recoder.setSubscriptionDuration(const Duration(milliseconds: 50));
 
     }catch(e){
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -73,26 +76,25 @@ class _RecordContainerState extends State<_RecordContainer> {
         ),
       );
     }
-    print("\n\n\n -------> permission ok ,\n\n\n");
-    await recoder.openRecorder();
-    print("\n\n\n -------> openRecorder ok ,\n\n\n");
-    isRecoderReady = true;
-    recoder.setSubscriptionDuration(const Duration(milliseconds: 500));
     print("\n\n\n -------> done func record ,\n\n\n");
-
   }
 
   Future record() async{
     if(!isRecoderReady){
       return;
     }
-    Directory tempDir = await getTemporaryDirectory();
+    Directory tempDir = await getApplicationDocumentsDirectory();
     String tempPath = tempDir.path;
     print(tempPath);
 
-    final _fileName = 'DEMO_${DateTime.now().millisecondsSinceEpoch.toString()}';
+    final _fileName = 'DEMO_${DateTime.now().millisecondsSinceEpoch.toString()}.aac';
     _currentFilePath = '$tempPath/$_fileName';
-    await recoder!.startRecorder(toFile: _currentFilePath);
+    try{
+      await recoder!.startRecorder(toFile: _currentFilePath, codec: Codec.aacMP4);
+    }catch(e){
+      print("startRecorder failed : ${e.toString()}");
+    }
+
     print("_currentFilePath = $_currentFilePath \n\n");
   }
 
