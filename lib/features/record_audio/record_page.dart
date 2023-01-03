@@ -2,12 +2,17 @@
 import 'dart:io';
 
 
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record_application/common/bases/base_widget.dart';
+
+import '../../amplifyconfiguration.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({Key? key}) : super(key: key);
@@ -53,7 +58,20 @@ class _RecordContainerState extends State<_RecordContainer> {
     // TODO: implement initState
     super.initState();
     initRecorder();
+    _configureAmplify();
+  }
 
+  Future<void> _configureAmplify() async {
+    try {
+      final auth = AmplifyAuthCognito();
+      final storage = AmplifyStorageS3();
+      await Amplify.addPlugins([auth, storage]);
+
+      // call Amplify.configure to use the initialized categories in your app
+      await Amplify.configure(amplifyconfig);
+    } on Exception catch (e) {
+      safePrint('An error occurred configuring Amplify: $e');
+    }
   }
 
   Future initRecorder() async{
@@ -104,6 +122,20 @@ class _RecordContainerState extends State<_RecordContainer> {
     }
     final path = await recoder.stopRecorder();
     final audioFile = File(path!);
+
+    // Upload the file to S3
+    try {
+      final UploadFileResult result = await Amplify.Storage.uploadFile(
+          local: audioFile,
+          key: 'baonh-audio-bucket.aac',
+          onProgress: (progress) {
+            safePrint('Fraction completed: ${progress.getFractionCompleted()}');
+          }
+      );
+      safePrint('Successfully uploaded file: ${result.key}');
+    } on StorageException catch (e) {
+      safePrint('Error uploading file: $e');
+    }
     print("Recorded audio : $audioFile");
   }
 
@@ -123,7 +155,6 @@ class _RecordContainerState extends State<_RecordContainer> {
                 if(snapshot.hasData){
                   print( snapshot.data!.duration);
                 }
-
                 final duration = snapshot.hasData ? snapshot.data!.duration : Duration.zero;
                 final twoDigitMinutes = convert2digits(duration.inMinutes.remainder(60));
                 final twoDigitSecond = convert2digits(duration.inSeconds.remainder(60));

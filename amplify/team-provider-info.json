@@ -1,0 +1,29 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-recordapplication-dev-214127-authRole",
+      "UnauthRoleArn": "arn:aws:iam::400466587103:role/amplify-recordapplication-dev-214127-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::400466587103:role/amplify-recordapplication-dev-214127-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-recordapplication-dev-214127-deployment",
+      "UnauthRoleName": "amplify-recordapplication-dev-214127-unauthRole",
+      "StackName": "amplify-recordapplication-dev-214127",
+      "StackId": "arn:aws:cloudformation:us-east-1:400466587103:stack/amplify-recordapplication-dev-214127/b7e5eec0-8b74-11ed-b702-1268c1c8de67",
+      "AmplifyAppId": "d9j87ym9xymx7"
+    },
+    "categories": {
+      "auth": {
+        "recordapplication3cbd81a9": {}
+      },
+      "function": {
+        "S3Trigger41b5565a": {
+          "deploymentBucketName": "amplify-recordapplication-dev-214127-deployment",
+          "s3Key": "amplify-builds/S3Trigger41b5565a-47417355534d55636361-build.zip"
+        }
+      },
+      "storage": {
+        "audiorecoder": {}
+      }
+    }
+  }
+}
