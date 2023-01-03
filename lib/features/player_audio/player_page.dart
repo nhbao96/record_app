@@ -23,9 +23,7 @@ class _PlayerPageState extends State<PlayerPage> {
   Widget build(BuildContext context) {
     return PageContainer(
       child: _PlayerContainer(),
-      providers: [
-        Provider<PlayerBloc>(create: (context)=>PlayerBloc())
-      ],
+      providers: [Provider<PlayerBloc>(create: (context) => PlayerBloc())],
       appBar: AppBar(
         title: Text("Player Page"),
       ),
@@ -53,18 +51,17 @@ class _PlayerContainerState extends State<_PlayerContainer> {
   double _setVolumeValue = 0;
 
   Future setAudio() async {
-
     //load audio from local
-    /*final result = await FilePicker.platform.pickFiles();
-    if(result != null){
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null) {
       final file = File(result.files.single.path!);
       _audioPlayer.setSourceAsset(file.path);
-    }*/
-     _audioPlayer.setSourceAsset('audio/audio_test.mp3');
+    }
+    //  _audioPlayer.setSourceAsset('audio/audio_test.mp3');
 
     //online
-    _audioPlayer.setSourceUrl(
-        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3');
+    /*_audioPlayer.setSourceUrl(
+        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3');*/
     VolumeController().listener((volume) {
       setState(() => _volumeListenerValue = volume);
     });
@@ -110,7 +107,6 @@ class _PlayerContainerState extends State<_PlayerContainer> {
     // TODO: implement dispose
     super.dispose();
     VolumeController().removeListener();
-
   }
 
   @override
@@ -169,7 +165,6 @@ class _PlayerContainerState extends State<_PlayerContainer> {
                     onPressed: () async {
                       if (_isPlaying) {
                         await _audioPlayer.pause();
-
                       } else {
                         await _audioPlayer.resume();
                       }

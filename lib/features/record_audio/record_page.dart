@@ -83,7 +83,7 @@ class _RecordContainerState extends State<_RecordContainer> {
     if(!isRecoderReady){
       return;
     }
-    Directory tempDir = await getApplicationDocumentsDirectory();
+    Directory tempDir = await getTemporaryDirectory();
     String tempPath = tempDir.path;
     print(tempPath);
 
@@ -120,6 +120,10 @@ class _RecordContainerState extends State<_RecordContainer> {
           StreamBuilder<RecordingDisposition>(
               stream: recoder.onProgress,
               builder: (context,snapshot){
+                if(snapshot.hasData){
+                  print( snapshot.data!.duration);
+                }
+
                 final duration = snapshot.hasData ? snapshot.data!.duration : Duration.zero;
                 final twoDigitMinutes = convert2digits(duration.inMinutes.remainder(60));
                 final twoDigitSecond = convert2digits(duration.inSeconds.remainder(60));
