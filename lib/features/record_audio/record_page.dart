@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:io';
 
 
@@ -45,6 +46,10 @@ class _RecordContainerState extends State<_RecordContainer> {
   bool isRecoderReady = false;
   late PermissionStatus isPermisMicro;
 
+  late StreamController<Duration> _streamController;
+  late Duration _timeDisplay;
+  late Timer _timer;
+  late bool _isRunningTime;
   String _currentFilePath = '', _recordedFilePath = '';
 
   @override
@@ -59,6 +64,9 @@ class _RecordContainerState extends State<_RecordContainer> {
     super.initState();
     initRecorder();
     _configureAmplify();
+    _streamController = StreamController<Duration>();
+    _timeDisplay = Duration.zero;
+    _isRunningTime = false;
   }
 
   Future<void> _configureAmplify() async {
@@ -113,6 +121,12 @@ class _RecordContainerState extends State<_RecordContainer> {
       print("startRecorder failed : ${e.toString()}");
     }
 
+    _timeDisplay = Duration.zero;
+    _timer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+      _timeDisplay+=Duration(milliseconds: 500);
+      _streamController.add(_timeDisplay);
+    });
+    _isRunningTime = true;
     print("_currentFilePath = $_currentFilePath \n\n");
   }
 
@@ -121,6 +135,8 @@ class _RecordContainerState extends State<_RecordContainer> {
       return;
     }
     final path = await recoder.stopRecorder();
+    _timer.cancel();
+    _isRunningTime = false;
     final audioFile = File(path!);
 
     // Upload the file to S3
@@ -136,6 +152,7 @@ class _RecordContainerState extends State<_RecordContainer> {
     } on StorageException catch (e) {
       safePrint('Error uploading file: $e');
     }
+
     print("Recorded audio : $audioFile");
   }
 
@@ -149,15 +166,16 @@ class _RecordContainerState extends State<_RecordContainer> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          StreamBuilder<RecordingDisposition>(
-              stream: recoder.onProgress,
+          StreamBuilder<Duration>(
+              stream: _streamController.stream,
               builder: (context,snapshot){
-                if(snapshot.hasData){
-                  print( snapshot.data!.duration);
+                if(snapshot.hasError || !_isRunningTime ){
+                  return Text('00:00s', style: TextStyle(color: Colors.black87,fontSize: 60,fontWeight: FontWeight.bold),);
+                  print("Skippie data");
                 }
-                final duration = snapshot.hasData ? snapshot.data!.duration : Duration.zero;
-                final twoDigitMinutes = convert2digits(duration.inMinutes.remainder(60));
-                final twoDigitSecond = convert2digits(duration.inSeconds.remainder(60));
+                final duration = snapshot.hasData ? snapshot.data : Duration.zero;
+                final twoDigitMinutes = convert2digits(duration!.inMinutes.remainder(60));
+                final twoDigitSecond = convert2digits(duration!.inSeconds.remainder(60));
 
                 return Text('$twoDigitMinutes:${twoDigitSecond}s', style: TextStyle(color: Colors.black87,fontSize: 60,fontWeight: FontWeight.bold),);
               }),
